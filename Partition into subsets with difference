@@ -1,0 +1,125 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class Solution {
+public:
+    // Recursive Approach with Memoization
+    int rec(int ind, int sum1, int totalSum, vector<int>& arr, vector<vector<int>>& dp) {
+        if (ind == 0) {
+            return abs((totalSum - sum1) - sum1);
+        }
+
+        if (dp[ind][sum1] != -1) return dp[ind][sum1];
+
+        // Option 1: Include the current element in sum1
+        int include = rec(ind - 1, sum1 + arr[ind], totalSum, arr, dp);
+
+        // Option 2: Exclude the current element from sum1
+        int exclude = rec(ind - 1, sum1, totalSum, arr, dp);
+
+        return dp[ind][sum1] = min(include, exclude);
+    }
+
+    // Tabulation Approach (Bottom-Up DP)
+    int tab(vector<int>& arr, int n) {
+        int totalSum = accumulate(arr.begin(), arr.end(), 0);
+        int k = totalSum;
+        vector<vector<bool>> dp(n, vector<bool>(k + 1, false));
+
+        // Base case: If sum is 0, it's always possible
+        for (int i = 0; i < n; ++i) dp[i][0] = true;
+
+        if (arr[0] <= k) dp[0][arr[0]] = true;
+
+        for (int ind = 1; ind < n; ++ind) {
+            for (int sum = 1; sum <= k; ++sum) {
+                bool notTake = dp[ind - 1][sum];
+                bool take = false;
+                if (sum >= arr[ind]) take = dp[ind - 1][sum - arr[ind]];
+
+                dp[ind][sum] = take || notTake;
+            }
+        }
+
+        int mini = INT_MAX;
+        for (int s1 = 0; s1 <= totalSum / 2; ++s1) {
+            if (dp[n - 1][s1]) {
+                mini = min(mini, abs((totalSum - s1) - s1));
+            }
+        }
+
+        return mini;
+    }
+
+    // Space Optimized Approach (Using Single Array)
+    int so(vector<int>& arr, int n) {
+        int totalSum = accumulate(arr.begin(), arr.end(), 0);
+        int k = totalSum;
+        vector<bool> prev(k + 1, false), curr(k + 1, false);
+
+        prev[0] = curr[0] = true;
+        if (arr[0] <= k) prev[arr[0]] = true;
+
+        for (int ind = 1; ind < n; ++ind) {
+            for (int sum = 0; sum <= k; ++sum) {
+                bool notTake = prev[sum];
+                bool take = false;
+                if (sum >= arr[ind]) take = prev[sum - arr[ind]];
+
+                curr[sum] = take || notTake;
+            }
+            prev = curr;
+        }
+
+        int mini = INT_MAX;
+        for (int s1 = 0; s1 <= totalSum / 2; ++s1) {
+            if (prev[s1]) {
+                mini = min(mini, abs((totalSum - s1) - s1));
+            }
+        }
+
+        return mini;
+    }
+
+    // Main function to find the minimum subset sum difference
+    int minSubsetSumDifference(vector<int>& arr) {
+        int n = arr.size();
+        int totalSum = accumulate(arr.begin(), arr.end(), 0);
+
+        // Recursive (Memoization)
+        vector<vector<int>> dp(n, vector<int>(totalSum + 1, -1));
+        int recAns = rec(n - 1, 0, totalSum, arr, dp);
+        cout << "Recursive (Memoization) Result: " << recAns << endl;
+
+        // Tabulation Approach
+        int tabAns = tab(arr, n);
+        cout << "Tabulation Result: " << tabAns << endl;
+
+        // Space Optimized Approach
+        int soAns = so(arr, n);
+        cout << "Space Optimized Result: " << soAns << endl;
+
+        return soAns;  // Returning the optimized approach answer
+    }
+};
+
+// Main Function for User Input
+int main() {
+    int n;
+    
+    cout << "Enter the size of the array: ";
+    cin >> n;
+    
+    vector<int> arr(n);
+    
+    cout << "Enter the array elements: ";
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+    }
+
+    Solution sol;
+    int result = sol.minSubsetSumDifference(arr);
+    cout << "Minimum Subset Sum Difference: " << result << endl;
+
+    return 0;
+}
