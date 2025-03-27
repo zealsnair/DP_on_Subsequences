@@ -1,0 +1,117 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class Solution {
+public:
+    // Recursive Approach with Memoization
+    int rec(int ind, int target, vector<int>& num, vector<vector<int>>& dp) {
+        if (ind == 0) {
+            // If target is 0 or can be formed using multiples of num[0]
+            return (target % num[0] == 0) ? 1 : 0;
+        }
+
+        if (dp[ind][target] != -1) return dp[ind][target];
+
+        int notTake = rec(ind - 1, target, num, dp);
+        int take = 0;
+        if (target >= num[ind]) {
+            take = rec(ind, target - num[ind], num, dp);
+        }
+
+        return dp[ind][target] = take + notTake;
+    }
+
+    // Tabulation Approach (Bottom-Up DP)
+    int tab(int n, int x, vector<int>& num) {
+        vector<vector<int>> dp(n, vector<int>(x + 1, 0));
+
+        // Base Case: Fill first row
+        for (int target = 0; target <= x; ++target) {
+            if (target % num[0] == 0) {
+                dp[0][target] = 1;
+            }
+        }
+
+        for (int ind = 1; ind < n; ++ind) {
+            for (int target = 0; target <= x; ++target) {
+                int notTake = dp[ind - 1][target];
+                int take = 0;
+                if (target >= num[ind]) {
+                    take = dp[ind][target - num[ind]];
+                }
+                dp[ind][target] = take + notTake;
+            }
+        }
+
+        return dp[n - 1][x];
+    }
+
+    // Space Optimized Approach
+    int so(int n, int x, vector<int>& num) {
+        vector<int> prev(x + 1, 0), curr(x + 1, 0);
+
+        // Base Case: Fill the first row
+        for (int target = 0; target <= x; ++target) {
+            if (target % num[0] == 0) {
+                prev[target] = 1;
+            }
+        }
+
+        for (int ind = 1; ind < n; ++ind) {
+            for (int target = 0; target <= x; ++target) {
+                int notTake = prev[target];
+                int take = 0;
+                if (target >= num[ind]) {
+                    take = curr[target - num[ind]];  // Important step
+                }
+                curr[target] = take + notTake;
+            }
+            prev = curr;
+        }
+
+        return prev[x];
+    }
+
+    // Main function to find the number of ways to form the amount
+    int change(int amount, vector<int>& coins) {
+        int n = coins.size();
+
+        // Recursive (Memoization)
+        vector<vector<int>> dp(n, vector<int>(amount + 1, -1));
+        int recAns = rec(n - 1, amount, coins, dp);
+        cout << "Recursive (Memoization) Result: " << recAns << endl;
+
+        // Tabulation Approach
+        int tabAns = tab(n, amount, coins);
+        cout << "Tabulation Result: " << tabAns << endl;
+
+        // Space Optimized Approach
+        int soAns = so(n, amount, coins);
+        cout << "Space Optimized Result: " << soAns << endl;
+
+        return soAns;  // Returning the optimized approach answer
+    }
+};
+
+// Main Function for User Input
+int main() {
+    int amount, n;
+    
+    cout << "Enter the number of coin types: ";
+    cin >> n;
+    
+    vector<int> coins(n);
+    cout << "Enter the coin denominations: ";
+    for (int i = 0; i < n; i++) {
+        cin >> coins[i];
+    }
+
+    cout << "Enter the target amount: ";
+    cin >> amount;
+
+    Solution sol;
+    int result = sol.change(amount, coins);
+    cout << "Total ways to form the amount: " << result << endl;
+
+    return 0;
+}
