@@ -1,0 +1,119 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class Solution {
+public:
+    // Recursive Approach with Memoization
+    int rec(int ind, int W, vector<int>& val, vector<int>& wt, vector<vector<int>>& dp) {
+        if (ind == 0) {
+            return (W / wt[0]) * val[0];
+        }
+
+        if (dp[ind][W] != -1) return dp[ind][W];
+
+        int notTake = rec(ind - 1, W, val, wt, dp);
+        int take = INT_MIN;
+
+        if (W >= wt[ind]) {
+            take = val[ind] + rec(ind, W - wt[ind], val, wt, dp);
+        }
+
+        return dp[ind][W] = max(take, notTake);
+    }
+
+    // Tabulation Approach (Bottom-Up DP)
+    int tab(int n, int maxWeight, vector<int>& wt, vector<int>& val) {
+        vector<vector<int>> dp(n, vector<int>(maxWeight + 1, 0));
+
+        // Base Case: Fill first row
+        for (int w = wt[0]; w <= maxWeight; ++w) {
+            dp[0][w] = (w / wt[0]) * val[0];
+        }
+
+        for (int ind = 1; ind < n; ++ind) {
+            for (int w = 0; w <= maxWeight; ++w) {
+                int notTake = dp[ind - 1][w];
+                int take = INT_MIN;
+
+                if (w >= wt[ind]) {
+                    take = val[ind] + dp[ind][w - wt[ind]];
+                }
+
+                dp[ind][w] = max(take, notTake);
+            }
+        }
+
+        return dp[n - 1][maxWeight];
+    }
+
+    // Space Optimized Approach (Using Single Array)
+    int so(int n, int maxWeight, vector<int>& wt, vector<int>& val) {
+        vector<int> prev(maxWeight + 1, 0);
+
+        // Base Case: Fill the first row
+        for (int w = wt[0]; w <= maxWeight; ++w) {
+            prev[w] = (w / wt[0]) * val[0];
+        }
+
+        for (int ind = 1; ind < n; ++ind) {
+            for (int w = 0; w <= maxWeight; ++w) {
+                int notTake = prev[w];
+                int take = 0;
+
+                if (w >= wt[ind]) {
+                    take = val[ind] + prev[w - wt[ind]];
+                }
+
+                prev[w] = max(take, notTake);
+            }
+        }
+        return prev[maxWeight];
+    }
+
+    // Main function to find the maximum profit
+    int unboundedKnapsack(int n, int w, vector<int>& profit, vector<int>& weight) {
+        // Recursive (Memoization)
+        vector<vector<int>> dp(n, vector<int>(w + 1, -1));
+        int recAns = rec(n - 1, w, profit, weight, dp);
+        cout << "Recursive (Memoization) Result: " << recAns << endl;
+
+        // Tabulation Approach
+        int tabAns = tab(n, w, weight, profit);
+        cout << "Tabulation Result: " << tabAns << endl;
+
+        // Space Optimized Approach
+        int soAns = so(n, w, weight, profit);
+        cout << "Space Optimized Result: " << soAns << endl;
+
+        return soAns;  // Returning the optimized approach answer
+    }
+};
+
+// Main Function for User Input
+int main() {
+    int n, W;
+    
+    cout << "Enter the number of items: ";
+    cin >> n;
+    
+    vector<int> profit(n), weight(n);
+    
+    cout << "Enter the profits: ";
+    for (int i = 0; i < n; i++) {
+        cin >> profit[i];
+    }
+
+    cout << "Enter the weights: ";
+    for (int i = 0; i < n; i++) {
+        cin >> weight[i];
+    }
+
+    cout << "Enter the maximum weight capacity: ";
+    cin >> W;
+
+    Solution sol;
+    int result = sol.unboundedKnapsack(n, W, profit, weight);
+    cout << "Maximum Profit: " << result << endl;
+
+    return 0;
+}
