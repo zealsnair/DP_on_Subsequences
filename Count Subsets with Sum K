@@ -1,0 +1,120 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class Solution {
+public:
+    // Recursive Approach with Memoization
+    int rec(int ind, int sum, vector<int>& num, vector<vector<int>>& dp) {
+        if (ind == 0) {
+            if (sum == 0 && num[0] == 0) return 2; // Both take and not take cases
+            if (sum == 0 || num[0] == sum) return 1;
+            return 0;
+        }
+
+        if (dp[ind][sum] != -1) return dp[ind][sum];
+
+        int notTake = rec(ind - 1, sum, num, dp);
+        int take = 0;
+        if (num[ind] <= sum) {
+            take = rec(ind - 1, sum - num[ind], num, dp);
+        }
+
+        return dp[ind][sum] = take + notTake;
+    }
+
+    // Tabulation Approach (Bottom-Up DP)
+    int tab(vector<int>& num, int tar) {
+        int n = num.size();
+        vector<vector<int>> dp(n, vector<int>(tar + 1, 0));
+
+        // Base Case handling
+        if (num[0] == 0) dp[0][0] = 2;  // Two ways: pick or not pick
+        else dp[0][0] = 1;  // Only one way: not pick
+
+        if (num[0] != 0 && num[0] <= tar) dp[0][num[0]] = 1;
+
+        for (int ind = 1; ind < n; ++ind) {
+            for (int sum = 0; sum <= tar; ++sum) {
+                int notTake = dp[ind - 1][sum];
+                int take = 0;
+                if (num[ind] <= sum) {
+                    take = dp[ind - 1][sum - num[ind]];
+                }
+                dp[ind][sum] = take + notTake;
+            }
+        }
+
+        return dp[n - 1][tar];
+    }
+
+    // Space Optimized Approach (Using Single Array)
+    int so(vector<int>& num, int tar) {
+        int n = num.size();
+        vector<int> prev(tar + 1, 0);
+
+        // Base Case handling
+        if (num[0] == 0) prev[0] = 2;  
+        else prev[0] = 1;
+
+        if (num[0] != 0 && num[0] <= tar) prev[num[0]] = 1;
+
+        for (int ind = 1; ind < n; ++ind) {
+            vector<int> curr(tar + 1, 0);
+            for (int sum = 0; sum <= tar; ++sum) {
+                int notTake = prev[sum];
+                int take = 0;
+                if (num[ind] <= sum) {
+                    take = prev[sum - num[ind]];
+                }
+                curr[sum] = take + notTake;
+            }
+            prev = curr;
+        }
+
+        return prev[tar];
+    }
+
+    // Main function to find the number of subsets
+    int findWays(vector<int>& num, int tar) {
+        int n = num.size();
+
+        // Recursive (Memoization)
+        vector<vector<int>> dp(n, vector<int>(tar + 1, -1));
+        int recAns = rec(n - 1, tar, num, dp);
+        cout << "Recursive (Memoization) Result: " << recAns << endl;
+
+        // Tabulation Approach
+        int tabAns = tab(num, tar);
+        cout << "Tabulation Result: " << tabAns << endl;
+
+        // Space Optimized Approach
+        int soAns = so(num, tar);
+        cout << "Space Optimized Result: " << soAns << endl;
+
+        return soAns;  // Returning the optimized approach answer
+    }
+};
+
+// Main Function for User Input
+int main() {
+    int n, target;
+    
+    cout << "Enter the size of the array: ";
+    cin >> n;
+    
+    vector<int> num(n);
+    
+    cout << "Enter the array elements: ";
+    for (int i = 0; i < n; i++) {
+        cin >> num[i];
+    }
+
+    cout << "Enter the target sum: ";
+    cin >> target;
+
+    Solution sol;
+    int result = sol.findWays(num, target);
+    cout << "Number of subsets with sum " << target << ": " << result << endl;
+
+    return 0;
+}
