@@ -1,0 +1,115 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// Recursive Approach with Memoization
+int rec(int ind, int W, vector<int>& val, vector<int>& wt, vector<vector<int>>& dp) {
+    if (ind == 0) {
+        return (W >= wt[0]) ? val[0] : 0;
+    }
+
+    if (dp[ind][W] != -1) return dp[ind][W];
+
+    int notTake = rec(ind - 1, W, val, wt, dp);
+    int take = (W >= wt[ind]) ? val[ind] + rec(ind - 1, W - wt[ind], val, wt, dp) : INT_MIN;
+
+    return dp[ind][W] = max(take, notTake);
+}
+
+// Tabulation Approach
+int tab(vector<int> wt, vector<int> val, int n, int maxWeight) {
+    vector<vector<int>> dp(n, vector<int>(maxWeight + 1, 0));
+
+    for (int w = wt[0]; w <= maxWeight; ++w) {
+        dp[0][w] = val[0];
+    }
+
+    for (int ind = 1; ind < n; ++ind) {
+        for (int w = 0; w <= maxWeight; ++w) {
+            int notTake = dp[ind - 1][w];
+            int take = (w >= wt[ind]) ? val[ind] + dp[ind - 1][w - wt[ind]] : INT_MIN;
+
+            dp[ind][w] = max(take, notTake);
+        }
+    }
+
+    return dp[n - 1][maxWeight];
+}
+
+// Space Optimized Approach (Using Two Arrays)
+int so(vector<int> wt, vector<int> val, int n, int maxWeight) {
+    vector<int> prev(maxWeight + 1, 0), curr(maxWeight + 1, 0);
+
+    for (int w = wt[0]; w <= maxWeight; ++w) {
+        prev[w] = val[0];
+    }
+
+    for (int ind = 1; ind < n; ++ind) {
+        for (int w = 0; w <= maxWeight; ++w) {
+            int notTake = prev[w];
+            int take = (w >= wt[ind]) ? val[ind] + prev[w - wt[ind]] : INT_MIN;
+
+            curr[w] = max(take, notTake);
+        }
+        prev = curr;
+    }
+
+    return prev[maxWeight];
+}
+
+// Fully Space Optimized Approach (Using Single Array)
+int soo(vector<int> wt, vector<int> val, int n, int maxWeight) {
+    vector<int> prev(maxWeight + 1, 0);
+
+    for (int w = wt[0]; w <= maxWeight; ++w) {
+        prev[w] = val[0];
+    }
+
+    for (int ind = 1; ind < n; ++ind) {
+        for (int w = maxWeight; w >= 0; --w) {
+            int notTake = prev[w];
+            int take = (w >= wt[ind]) ? val[ind] + prev[w - wt[ind]] : INT_MIN;
+
+            prev[w] = max(take, notTake);
+        }
+    }
+    return prev[maxWeight];
+}
+
+// Main function
+int main() {
+    int n, maxWeight;
+
+    // User input
+    cout << "Enter number of items: ";
+    cin >> n;
+
+    vector<int> weight(n), value(n);
+
+    cout << "Enter weights of items: ";
+    for (int i = 0; i < n; ++i) {
+        cin >> weight[i];
+    }
+
+    cout << "Enter values of items: ";
+    for (int i = 0; i < n; ++i) {
+        cin >> value[i];
+    }
+
+    cout << "Enter maximum weight capacity of knapsack: ";
+    cin >> maxWeight;
+
+    // Recursive Approach with Memoization
+    vector<vector<int>> dp(n, vector<int>(maxWeight + 1, -1));
+    cout << "Recursive (Memoization) Result: " << rec(n - 1, maxWeight, value, weight, dp) << endl;
+
+    // Tabulation Approach
+    cout << "Tabulation Result: " << tab(weight, value, n, maxWeight) << endl;
+
+    // Space Optimized Approach (Using Two Arrays)
+    cout << "Space Optimized (Two Arrays) Result: " << so(weight, value, n, maxWeight) << endl;
+
+    // Fully Space Optimized Approach (Using Single Array)
+    cout << "Fully Space Optimized (Single Array) Result: " << soo(weight, value, n, maxWeight) << endl;
+
+    return 0;
+}
