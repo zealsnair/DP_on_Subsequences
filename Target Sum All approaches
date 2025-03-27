@@ -1,0 +1,122 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// Recursive Approach with Memoization
+int countPartitionsUtil(int ind, int target, vector<int>& arr, vector<vector<int>>& dp) {
+    if (ind == 0) {
+        if (target == 0 && arr[0] == 0) return 2; 
+        if (target == 0 || target == arr[0]) return 1;
+        return 0;
+    }
+    
+    if (dp[ind][target] != -1) return dp[ind][target];
+
+    int notTaken = countPartitionsUtil(ind - 1, target, arr, dp);
+    int taken = 0;
+    if (arr[ind] <= target)
+        taken = countPartitionsUtil(ind - 1, target - arr[ind], arr, dp);
+
+    return dp[ind][target] = (notTaken + taken);
+}
+
+// Tabulation Approach
+int tab(int n, int s2, vector<int>& arr) {
+    vector<vector<int>> dp(n, vector<int>(s2 + 1, 0));
+
+    if (arr[0] == 0)
+        dp[0][0] = 2; // Two ways to make sum 0 (take or not take zero)
+    else
+        dp[0][0] = 1;
+
+    if (arr[0] != 0 && arr[0] <= s2)
+        dp[0][arr[0]] = 1;
+
+    for (int ind = 1; ind < n; ++ind) {
+        for (int target = 0; target <= s2; ++target) {
+            int notTaken = dp[ind - 1][target];
+            int taken = 0;
+            if (arr[ind] <= target)
+                taken = dp[ind - 1][target - arr[ind]];
+            dp[ind][target] = notTaken + taken;
+        }
+    }
+    return dp[n - 1][s2];
+}
+
+// Space Optimized Approach
+int so(int n, int s2, vector<int>& arr) {
+    vector<int> prev(s2 + 1, 0), curr(s2 + 1, 0);
+
+    if (arr[0] == 0)
+        prev[0] = 2;
+    else
+        prev[0] = 1;
+
+    if (arr[0] != 0 && arr[0] <= s2)
+        prev[arr[0]] = 1;
+
+    for (int ind = 1; ind < n; ++ind) {
+        for (int target = 0; target <= s2; ++target) {
+            int notTaken = prev[target];
+            int taken = 0;
+            if (arr[ind] <= target)
+                taken = prev[target - arr[ind]];
+            curr[target] = notTaken + taken;
+        }
+        prev = curr;
+    }
+    return prev[s2];
+}
+
+// Function to count number of ways to assign + and - to get target sum
+int countPartitions(int n, int d, vector<int>& arr) {
+    int totSum = accumulate(arr.begin(), arr.end(), 0);
+
+    if (totSum - d < 0) return 0;
+    if ((totSum - d) % 2 == 1) return 0;
+
+    int s2 = (totSum - d) / 2;
+
+    // Recursive with Memoization
+    vector<vector<int>> dp(n, vector<int>(s2 + 1, -1));
+    int recAns = countPartitionsUtil(n - 1, s2, arr, dp);
+    cout << "Recursive (Memoization) Result: " << recAns << endl;
+
+    // Tabulation Approach
+    int tabAns = tab(n, s2, arr);
+    cout << "Tabulation Result: " << tabAns << endl;
+
+    // Space Optimized Approach
+    int soAns = so(n, s2, arr);
+    cout << "Space Optimized Result: " << soAns << endl;
+
+    return soAns;
+}
+
+// Wrapper function to call countPartitions
+int targetSum(int n, int target, vector<int>& arr) {
+    return countPartitions(n, target, arr);
+}
+
+// Main Function
+int main() {
+    int n, target;
+    
+    // User Input
+    cout << "Enter the number of elements in the array: ";
+    cin >> n;
+    
+    vector<int> arr(n);
+    cout << "Enter the elements of the array: ";
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+    }
+
+    cout << "Enter the target sum: ";
+    cin >> target;
+
+    int result = targetSum(n, target, arr);
+    cout << "Total Ways to Reach Target Sum: " << result << endl;
+    
+    return 0;
+}
