@@ -1,0 +1,111 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class Solution {
+public:
+    // Recursive Approach with Memoization
+    int rec(int ind, int target, vector<int>& val, vector<vector<int>>& dp) {
+        if (ind == 0) {
+            return target * val[0];
+        }
+
+        if (dp[ind][target] != -1) return dp[ind][target];
+
+        int notCut = rec(ind - 1, target, val, dp);
+        int cut = 0;
+
+        if (target >= (ind + 1)) {
+            cut = val[ind] + rec(ind, target - (ind + 1), val, dp);
+        }
+
+        return dp[ind][target] = max(cut, notCut);
+    }
+
+    // Tabulation Approach (Bottom-Up DP)
+    int tab(vector<int>& val, int n) {
+        vector<vector<int>> dp(n, vector<int>(n + 1, 0));
+
+        // Base Case: Fill the first row
+        for (int l = 0; l <= n; ++l) {
+            dp[0][l] = l * val[0];
+        }
+
+        for (int ind = 1; ind < n; ++ind) {
+            for (int l = 0; l <= n; ++l) {
+                int notTake = dp[ind - 1][l];
+                int take = INT_MIN;
+
+                if (l >= (ind + 1)) {
+                    take = val[ind] + dp[ind][l - (ind + 1)];
+                }
+
+                dp[ind][l] = max(take, notTake);
+            }
+        }
+
+        return dp[n - 1][n];
+    }
+
+    // Space Optimized Approach (Using Single Array)
+    int so(vector<int>& val, int n) {
+        vector<int> prev(n + 1, 0);
+
+        // Base Case: Fill the first row
+        for (int l = 0; l <= n; ++l) {
+            prev[l] = l * val[0];
+        }
+
+        for (int ind = 1; ind < n; ++ind) {
+            for (int l = 0; l <= n; ++l) {
+                int notTake = prev[l];
+                int take = INT_MIN;
+
+                if (l >= (ind + 1)) {
+                    take = val[ind] + prev[l - (ind + 1)];
+                }
+
+                prev[l] = max(take, notTake);
+            }
+        }
+        return prev[n];
+    }
+
+    // Main function to find the maximum profit
+    int cutRod(vector<int>& price, int n) {
+        // Recursive (Memoization)
+        vector<vector<int>> dp(n, vector<int>(n + 1, -1));
+        int recAns = rec(n - 1, n, price, dp);
+        cout << "Recursive (Memoization) Result: " << recAns << endl;
+
+        // Tabulation Approach
+        int tabAns = tab(price, n);
+        cout << "Tabulation Result: " << tabAns << endl;
+
+        // Space Optimized Approach
+        int soAns = so(price, n);
+        cout << "Space Optimized Result: " << soAns << endl;
+
+        return soAns;  // Returning the optimized approach answer
+    }
+};
+
+// Main Function for User Input
+int main() {
+    int n;
+    
+    cout << "Enter the length of the rod: ";
+    cin >> n;
+    
+    vector<int> price(n);
+    
+    cout << "Enter the prices: ";
+    for (int i = 0; i < n; i++) {
+        cin >> price[i];
+    }
+
+    Solution sol;
+    int result = sol.cutRod(price, n);
+    cout << "Maximum Profit: " << result << endl;
+
+    return 0;
+}
