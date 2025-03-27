@@ -1,0 +1,95 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// Recursive Approach with Memoization
+bool rec(int ind, int target, vector<int>& arr, vector<vector<int>>& dp) {
+    if (target == 0) return true;  // Base Case: If target is 0, subset exists
+    if (ind == 0) return arr[0] == target; // Only one element to consider
+
+    if (dp[ind][target] != -1) return dp[ind][target];
+
+    bool notTaken = rec(ind - 1, target, arr, dp);
+    bool taken = (arr[ind] <= target) ? rec(ind - 1, target - arr[ind], arr, dp) : false;
+
+    return dp[ind][target] = notTaken || taken;
+}
+
+// Tabulation Approach (Bottom-Up DP)
+bool tab(int n, int k, vector<int>& arr) {
+    vector<vector<bool>> dp(n, vector<bool>(k + 1, false));
+
+    for (int i = 0; i < n; i++) dp[i][0] = true; // If target is 0, always true
+    if (arr[0] <= k) dp[0][arr[0]] = true; // Base case for first element
+
+    for (int ind = 1; ind < n; ind++) {
+        for (int target = 1; target <= k; target++) {
+            bool notTaken = dp[ind - 1][target];
+            bool taken = (arr[ind] <= target) ? dp[ind - 1][target - arr[ind]] : false;
+            dp[ind][target] = notTaken || taken;
+        }
+    }
+
+    return dp[n - 1][k];
+}
+
+// Space Optimized Approach (Using a Single Array)
+bool so(int n, int k, vector<int>& arr) {
+    vector<bool> prev(k + 1, false);
+    
+    prev[0] = true; // If target is 0, always true
+    if (arr[0] <= k) prev[arr[0]] = true; // Base case for first element
+
+    for (int ind = 1; ind < n; ind++) {
+        for (int target = k; target >= 0; target--) { // Traverse backward to avoid overwriting data
+            if (arr[ind] <= target)
+                prev[target] = prev[target] || prev[target - arr[ind]];
+        }
+    }
+
+    return prev[k];
+}
+
+// Function to check if we can partition the array into two subsets with equal sum
+bool canPartition(int n, vector<int>& arr) {
+    int totSum = accumulate(arr.begin(), arr.end(), 0);
+
+    if (totSum % 2 == 1) return false; // If total sum is odd, partitioning isn't possible
+
+    int target = totSum / 2;
+
+    // Recursive Approach with Memoization
+    vector<vector<int>> dp(n, vector<int>(target + 1, -1));
+    bool recAns = rec(n - 1, target, arr, dp);
+    cout << "Recursive (Memoization) Result: " << (recAns ? "Partition possible" : "Partition not possible") << endl;
+
+    // Tabulation Approach
+    cout << "Tabulation Result: " << (tab(n, target, arr) ? "Partition possible" : "Partition not possible") << endl;
+
+    // Space Optimized Approach
+    cout << "Space Optimized (Single Array) Result: " << (so(n, target, arr) ? "Partition possible" : "Partition not possible") << endl;
+
+    return so(n, target, arr); // Using space optimized approach as final return
+}
+
+// Main Function
+int main() {
+    int n;
+    
+    // User Input
+    cout << "Enter the number of elements in the array: ";
+    cin >> n;
+    
+    vector<int> arr(n);
+    cout << "Enter the elements of the array: ";
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+    }
+    
+    if (canPartition(n, arr))
+        cout << "The Array can be partitioned into two equal subsets\n";
+    else
+        cout << "The Array cannot be partitioned into two equal subsets\n";
+    
+    return 0;
+}
+
