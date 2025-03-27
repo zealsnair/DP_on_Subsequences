@@ -1,0 +1,118 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// Recursive Approach with Memoization
+int rec(int ind, int target, vector<int>& coins, vector<vector<int>>& dp) {
+    if (ind == 0) {
+        return (target % coins[0] == 0) ? target / coins[0] : 1e9;
+    }
+
+    if (dp[ind][target] != -1) return dp[ind][target];
+
+    int notTake = rec(ind - 1, target, coins, dp);
+    int take = (target >= coins[ind]) ? 1 + rec(ind, target - coins[ind], coins, dp) : 1e9;
+
+    return dp[ind][target] = min(take, notTake);
+}
+
+// Tabulation Approach (Bottom-Up DP)
+int tab(int n, int amount, vector<int>& coins) {
+    vector<vector<int>> dp(n, vector<int>(amount + 1, 0));
+
+    for (int target = 0; target <= amount; ++target) {
+        dp[0][target] = (target % coins[0] == 0) ? target / coins[0] : 1e9;
+    }
+
+    for (int ind = 1; ind < n; ++ind) {
+        for (int target = 0; target <= amount; ++target) {
+            int notTake = dp[ind - 1][target];
+            int take = (target >= coins[ind]) ? 1 + dp[ind][target - coins[ind]] : 1e9;
+
+            dp[ind][target] = min(take, notTake);
+        }
+    }
+
+    return (dp[n - 1][amount] >= 1e9) ? -1 : dp[n - 1][amount];
+}
+
+// Space Optimized Approach (Using Two 1D Arrays)
+int so(int n, int amount, vector<int>& coins) {
+    vector<int> prev(amount + 1, 0), curr(amount + 1, 0);
+
+    for (int target = 0; target <= amount; ++target) {
+        prev[target] = (target % coins[0] == 0) ? target / coins[0] : 1e9;
+    }
+
+    for (int ind = 1; ind < n; ++ind) {
+        for (int target = 0; target <= amount; ++target) {
+            int notTake = prev[target];
+            int take = (target >= coins[ind]) ? 1 + curr[target - coins[ind]] : 1e9;
+
+            curr[target] = min(take, notTake);
+        }
+        prev = curr;
+    }
+
+    return (prev[amount] >= 1e9) ? -1 : prev[amount];
+}
+
+// Fully Space Optimized (Using a Single Array)
+int soo(int n, int amount, vector<int>& coins) {
+    vector<int> prev(amount + 1, 1e9);
+
+    prev[0] = 0; // Base case: 0 coins required to make amount 0
+    for (int target = 0; target <= amount; ++target) {
+        if (target % coins[0] == 0) {
+            prev[target] = target / coins[0];
+        }
+    }
+
+    for (int ind = 1; ind < n; ++ind) {
+        for (int target = 0; target <= amount; ++target) {
+            int notTake = prev[target];
+            int take = (target >= coins[ind]) ? 1 + prev[target - coins[ind]] : 1e9;
+
+            prev[target] = min(take, notTake);
+        }
+    }
+
+    return (prev[amount] >= 1e9) ? -1 : prev[amount];
+}
+
+// Function to call all methods and compare results
+void solve() {
+    int n, amount;
+    
+    // User Input
+    cout << "Enter number of coin types: ";
+    cin >> n;
+    
+    vector<int> coins(n);
+    cout << "Enter coin denominations: ";
+    for (int i = 0; i < n; ++i) {
+        cin >> coins[i];
+    }
+
+    cout << "Enter the amount to make: ";
+    cin >> amount;
+
+    // Recursive Approach with Memoization
+    vector<vector<int>> dp(n, vector<int>(amount + 1, -1));
+    int recAns = rec(n - 1, amount, coins, dp);
+    cout << "Recursive (Memoization) Result: " << ((recAns >= 1e9) ? -1 : recAns) << endl;
+
+    // Tabulation Approach
+    cout << "Tabulation Result: " << tab(n, amount, coins) << endl;
+
+    // Space Optimized Approach (Using Two Arrays)
+    cout << "Space Optimized (Two Arrays) Result: " << so(n, amount, coins) << endl;
+
+    // Fully Space Optimized Approach (Using Single Array)
+    cout << "Fully Space Optimized (Single Array) Result: " << soo(n, amount, coins) << endl;
+}
+
+// Main Function
+int main() {
+    solve();
+    return 0;
+}
